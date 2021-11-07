@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"
-import {Container, Box, Grid, Pagination, CircularProgress} from '@mui/material';
+import {Container, Box, Grid, Pagination, CircularProgress, Alert} from '@mui/material';
 
 const App = () => {
   console.log("APP RELOADED");
@@ -42,8 +42,8 @@ const App = () => {
         });
       })
       .catch((error) => {
-        console.error("Error fetching data: ", error);
-        setError(error);
+        console.error("Error fetching data: ", error.message);
+        setError(error.message);
       })
       .finally(() => {
         setLoading(false);
@@ -65,11 +65,14 @@ const App = () => {
     )
   }
 
-  if (error) return "Error!";
+  if (error) {
+    return <Alert severity="warning">{error}</Alert>
+  };
+
   return (
     <Container maxWidth="lg">
       <Grid container spacing={4}>
-        {state.paginatedData.map((el, i) => (
+        {state.paginatedData?.map((el, i) => (
           <Grid item key={el.title}>
             <img src={el.thumbnailUrl} alt={el.title} />
           </Grid>
