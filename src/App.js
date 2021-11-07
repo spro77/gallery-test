@@ -90,7 +90,7 @@ const App = () => {
   }
 
   const filterChangeHandler = (e) => {
-    const sortedData = e.target.value === 0 ? paginationState.data.sort((a, b) => a.albumId - b.albumId) : paginationState.data.sort((a, b) => a.title.localeCompare(b.title))
+    const sortedData = e.target.value === 0 ? paginationState.data.sort((a, b) => a.albumId - b.albumId || a.id - b.id) : paginationState.data.sort((a, b) => a.title.localeCompare(b.title))
     setPaginationState({
       ...paginationState,
       data: sortedData,
