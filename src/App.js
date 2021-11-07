@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"
-import {Container, Box, Grid, Pagination, CircularProgress, Alert} from '@mui/material';
+import {Container, Box, Grid, Pagination, CircularProgress, Alert, Card, CardContent, CardMedia, Typography, Button, CardActionArea, CardActions} from '@mui/material';
 
 const App = () => {
   console.log("APP RELOADED");
@@ -57,6 +57,22 @@ const App = () => {
    })
  }
 
+ const onCardClickHandler = (id) => {
+   axios.delete(`http://jsonplaceholder.typicode.com/photos/${id}`)
+    .then(() => {
+      const newData = state.data.filter(el => el.id !== id)
+      setState({
+        ...state,
+        data: newData,
+        ...paginateData(newData, state.currentPage)
+      });
+    })
+    .catch((error) => {
+      console.error("Error fetching data: ", error.message);
+      setError(error.message);
+    })
+ }
+
   if (loading) {
     return(
       <Box style={{ display: 'flex', height:'100%', alignItems:'center', justifyContent: 'center'}}>
@@ -70,11 +86,33 @@ const App = () => {
   };
 
   return (
-    <Container maxWidth="lg">
-      <Grid container spacing={4}>
+    <Container maxWidth="lg" style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+      <Grid container spacing={2}>
         {state.paginatedData?.map((el, i) => (
           <Grid item key={el.title}>
-            <img src={el.thumbnailUrl} alt={el.title} />
+            <Card style={{ width: 267 }}>
+              <CardActionArea>
+                <CardMedia
+                  component="img"
+                  height="150"
+                  image={el.thumbnailUrl}
+                  alt={el.title}
+                />
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    {el.id}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {el.title}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+              <CardActions>
+                <Button size="small" color="primary" onClick={()=>onCardClickHandler(el.id)}>
+                  Delete
+                </Button>
+              </CardActions>
+            </Card>
           </Grid>
         ))}
       </Grid>
@@ -84,6 +122,7 @@ const App = () => {
       hideNextButton={state.currentPage === state.totalPages}
       hidePrevButton={state.currentPage === 1}
       onChange={(e,p)=>onPageChangeHandler(e,p)}
+      style={{marginTop:'3rem'}}
       />
     </Container>
   )
