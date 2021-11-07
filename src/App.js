@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"
-import {Container, Box, Grid, Pagination, CircularProgress, Alert, Card, CardContent, CardMedia, Typography, Button, CardActionArea, CardActions} from '@mui/material';
+import {Container, Box, Grid, Pagination, CircularProgress, Alert, Card, CardContent, CardMedia, Typography, Button, CardActionArea, CardActions, Modal} from '@mui/material';
 
 const App = () => {
-  console.log("APP RELOADED");
+  const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [state, setState] = useState({
+  const [paginationState, setPaginationState] = useState({
     data: null,
     currentPage: null,
     totalPages: null,
@@ -31,12 +31,24 @@ const App = () => {
     };
   }
 
+  const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 800,
+    bgcolor: 'background.paper',
+    border: '1px solid darkgray',
+    borderRadius: '.5rem',
+    boxShadow: 24,
+    p: 2,
+  };
+
   useEffect(() => {
-    console.log("FETCHING");
     axios("http://jsonplaceholder.typicode.com/photos")
       .then(({data}) => {
-        setState({
-          ...state,
+        setPaginationState({
+          ...paginationState,
           data: data,
           ...paginateData(data)
         });
@@ -50,28 +62,32 @@ const App = () => {
     });
  }, []);
 
- const onPageChangeHandler = (e, p) => {
-   setState({
-     ...state,
-     ...paginateData(state.data, p)
-   })
- }
+  const onPageChangeHandler = (e, p) => {
+    setPaginationState({
+      ...paginationState,
+      ...paginateData(paginationState.data, p)
+    })
+  }
 
- const onCardClickHandler = (id) => {
-   axios.delete(`http://jsonplaceholder.typicode.com/photos/${id}`)
-    .then(() => {
-      const newData = state.data.filter(el => el.id !== id)
-      setState({
-        ...state,
-        data: newData,
-        ...paginateData(newData, state.currentPage)
-      });
-    })
-    .catch((error) => {
-      console.error("Error fetching data: ", error.message);
-      setError(error.message);
-    })
- }
+  const onDeleteHandler = (id) => {
+    axios.delete(`http://jsonplaceholder.typicode.com/photos/${id}`)
+      .then(() => {
+        const newData = paginationState.data.filter(el => el.id !== id)
+        setPaginationState({
+          ...paginationState,
+          data: newData,
+          ...paginateData(newData, paginationState.currentPage)
+        });
+      })
+      .catch((error) => {
+        console.error("Error fetching data: ", error.message);
+        setError(error.message);
+      })
+  }
+
+  const cardActionAreaHandler = (el) => {
+    setOpenModal(el)
+  }
 
   if (loading) {
     return(
@@ -86,45 +102,69 @@ const App = () => {
   };
 
   return (
-    <Container maxWidth="lg" style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
-      <Grid container spacing={2}>
-        {state.paginatedData?.map((el, i) => (
-          <Grid item key={el.title}>
-            <Card style={{ width: 267 }}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="150"
-                  image={el.thumbnailUrl}
-                  alt={el.title}
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    {el.id}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {el.title}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary" onClick={()=>onCardClickHandler(el.id)}>
-                  Delete
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      <Pagination
-      count={state.totalPages}
-      page={state.currentPage}
-      hideNextButton={state.currentPage === state.totalPages}
-      hidePrevButton={state.currentPage === 1}
-      onChange={(e,p)=>onPageChangeHandler(e,p)}
-      style={{marginTop:'3rem'}}
-      />
-    </Container>
+    <>
+      <Container maxWidth="lg" style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+        <Grid container spacing={2}>
+          {paginationState.paginatedData?.map((el, i) => (
+            <Grid item key={el.title}>
+              <Card style={{ width: 267 }}>
+                <CardActionArea onClick={()=>cardActionAreaHandler(el)}>
+                  <CardMedia
+                    component="img"
+                    height="150"
+                    image={el.thumbnailUrl}
+                    alt={el.title}
+                  />
+                  <CardContent>
+                    <Typography gutterBottom variant="h5" component="div">
+                      {el.id}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {el.title}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+                <CardActions>
+                  <Button size="small" color="primary" onClick={()=>onDeleteHandler(el.id)}>
+                    Delete
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+        <Pagination
+        count={paginationState.totalPages}
+        page={paginationState.currentPage}
+        hideNextButton={paginationState.currentPage === paginationState.totalPages}
+        hidePrevButton={paginationState.currentPage === 1}
+        onChange={(e,p)=>onPageChangeHandler(e,p)}
+        style={{marginTop:'3rem'}}
+        />
+      </Container>
+
+      <Modal
+        open={Boolean(openModal)}
+        onClose={()=>setOpenModal(false)}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={modalStyle}>
+          <CardMedia
+            component="img"
+            height="600"
+            image={openModal.url}
+            alt={openModal.title}
+          />
+          <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ mt: 2 }}>
+            {`Album ${openModal.albumId} / Item ${openModal.id}`}
+          </Typography>
+          <Typography id="modal-modal-description">
+            {openModal.title}
+          </Typography>
+        </Box>
+      </Modal>
+    </>
   )
 }
 export default App
