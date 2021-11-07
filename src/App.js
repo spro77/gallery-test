@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"
-import {Container, Box, Grid, Pagination, CircularProgress, Alert, Card, CardContent, CardMedia, Typography, Button, CardActionArea, CardActions, Modal} from '@mui/material';
+import {AppBar, Toolbar, Container, Box, Grid, Pagination, CircularProgress, Alert, Card, CardContent, CardMedia, Typography, Button, CardActionArea, CardActions, Modal, FormControl, InputLabel, Select, MenuItem} from '@mui/material';
 
 const App = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -60,7 +60,7 @@ const App = () => {
       .finally(() => {
         setLoading(false);
     });
- }, []);
+  }, []);
 
   const onPageChangeHandler = (e, p) => {
     setPaginationState({
@@ -89,6 +89,15 @@ const App = () => {
     setOpenModal(el)
   }
 
+  const filterChangeHandler = (e) => {
+    const sortedData = e.target.value === 0 ? paginationState.data.sort((a, b) => a.albumId - b.albumId) : paginationState.data.sort((a, b) => a.title.localeCompare(b.title))
+    setPaginationState({
+      ...paginationState,
+      data: sortedData,
+      ...paginateData(sortedData)
+    });
+  }
+
   if (loading) {
     return(
       <Box style={{ display: 'flex', height:'100%', alignItems:'center', justifyContent: 'center'}}>
@@ -103,7 +112,33 @@ const App = () => {
 
   return (
     <>
-      <Container maxWidth="lg" style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+      <AppBar position="sticky" style={{background:'white'}}>
+        <Toolbar>
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ flexGrow: 1, color:'black', display: { xs: 'none', sm: 'block' } }}
+          >
+            PHOTOS
+          </Typography>
+          <FormControl sx={{ m: 1, minWidth: 80 }}>
+            <InputLabel id="filter-label">Filter</InputLabel>
+            <Select
+              labelId="filter-label"
+              id="filter-autowidth"
+              onChange={filterChangeHandler}
+              autoWidth
+              label="Filter"
+              defaultValue={0}
+            >
+              <MenuItem value={0}>By album</MenuItem>
+              <MenuItem value={1}>By alphabet</MenuItem>
+            </Select>
+          </FormControl>
+        </Toolbar>
+      </AppBar>
+      <Container maxWidth="lg" style={{display:'flex', flexDirection:'column', alignItems:'center', paddingTop: '48px'}}>
         <Grid container spacing={2}>
           {paginationState.paginatedData?.map((el, i) => (
             <Grid item key={el.title}>
