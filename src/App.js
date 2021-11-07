@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"
-import {Container, Grid, Pagination} from '@mui/material';
-import './App.css';
+import {Container, Box, Grid, Pagination, CircularProgress} from '@mui/material';
 
 const App = () => {
   console.log("APP RELOADED");
@@ -58,7 +57,14 @@ const App = () => {
    })
  }
 
-  if (loading) return "Loading...";
+  if (loading) {
+    return(
+      <Box style={{ display: 'flex', height:'100%', alignItems:'center', justifyContent: 'center'}}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
   if (error) return "Error!";
   return (
     <Container maxWidth="lg">
